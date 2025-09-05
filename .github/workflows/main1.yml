@@ -1,4 +1,4 @@
-name: multik
+name: 🚀 Build Multi-Platform Apps
 
 on:
   push:
@@ -72,11 +72,53 @@ jobs:
       if: matrix.os != 'windows-latest'
       run: chmod +x dist/${{ matrix.artifact }}
     
+    - name: 📦 Create DMG for macOS
+      if: matrix.os == 'macos-latest'
+      run: |
+        # Создаем App Bundle структуру
+        mkdir -p dist/DivergenceAnalyzer.app/Contents/MacOS
+        mkdir -p dist/DivergenceAnalyzer.app/Contents/Resources
+        
+        # Копируем исполняемый файл
+        cp dist/${{ matrix.artifact }} dist/DivergenceAnalyzer.app/Contents/MacOS/DivergenceAnalyzer
+        chmod +x dist/DivergenceAnalyzer.app/Contents/MacOS/DivergenceAnalyzer
+        
+        # Создаем Info.plist
+        cat > dist/DivergenceAnalyzer.app/Contents/Info.plist << EOF
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>CFBundleExecutable</key>
+            <string>DivergenceAnalyzer</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.zakat1191.divergenceanalyzer</string>
+            <key>CFBundleName</key>
+            <string>Divergence Analyzer</string>
+            <key>CFBundleVersion</key>
+            <string>1.0</string>
+            <key>CFBundleShortVersionString</key>
+            <string>1.0</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+        </dict>
+        </plist>
+        EOF
+        
+        # Создаем DMG
+        hdiutil create -volname "Divergence Analyzer" -srcfolder dist/DivergenceAnalyzer.app -ov -format UDZO dist/DivergenceAnalyzer.dmg
+        
+        # Добавляем DMG к артефактам
+        echo "DMG created: dist/DivergenceAnalyzer.dmg"
+        ls -la dist/*.dmg
+    
     - name: 📤 Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.name }}-Build
-        path: dist/${{ matrix.artifact }}
+        path: |
+          dist/${{ matrix.artifact }}
+          dist/*.dmg
         
     - name: 🎉 Build complete
       run: echo "✅ Build completed for ${{ matrix.name }}!"
