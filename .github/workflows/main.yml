@@ -88,7 +88,7 @@ jobs:
     
     steps:
     - name: 📥 Download all artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
     
     - name: 📁 List artifacts
       run: |
@@ -97,12 +97,12 @@ jobs:
     
     - name: 🏷️ Create Release
       id: create_release
-      uses: actions/create-release@v1
+      uses: softprops/action-gh-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: v${{ github.run_number }}
-        release_name: 🎯 Divergence Analyzer v${{ github.run_number }}
+        name: 🎯 Divergence Analyzer v${{ github.run_number }}
         body: |
           🚀 **Автоматическая сборка Анализатора расхождений**
           
@@ -122,33 +122,7 @@ jobs:
           *Собрано автоматически через GitHub Actions*
         draft: false
         prerelease: false
-    
-    - name: 📎 Upload Windows Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./Windows-Build/divergence-analyzer-windows.exe
-        asset_name: divergence-analyzer-windows.exe
-        asset_content_type: application/octet-stream
-    
-    - name: 📎 Upload macOS Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./macOS-Build/divergence-analyzer-macos
-        asset_name: divergence-analyzer-macos
-        asset_content_type: application/octet-stream
-    
-    - name: 📎 Upload Linux Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./Linux-Build/divergence-analyzer-linux
-        asset_name: divergence-analyzer-linux
-        asset_content_type: application/octet-stream
+        files: |
+          Windows-Build/divergence-analyzer-windows.exe
+          macOS-Build/divergence-analyzer-macos
+          Linux-Build/divergence-analyzer-linux
