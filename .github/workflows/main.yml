@@ -33,7 +33,7 @@ jobs:
       uses: actions/checkout@v4
     
     - name: 🐍 Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.9'
     
@@ -42,15 +42,21 @@ jobs:
         python -m pip install --upgrade pip
         pip install pandas matplotlib numpy pyinstaller
     
+    - name: 📁 List files (Debug)
+      run: |
+        echo "=== Root directory ==="
+        ls -la
+        echo "=== Looking for Python files ==="
+        find . -name "*.py" -type f
+      shell: bash
+    
     - name: 🔨 Build application (${{ matrix.name }})
       run: ${{ matrix.build_cmd }}
-      working-directory: ./DivergenceAnalyzer
     
     - name: 📁 List dist contents (Debug)
       run: |
         echo "=== Dist directory contents ==="
         ls -la dist/
-      working-directory: ./DivergenceAnalyzer
       shell: bash
     
     - name: 🏷️ Rename executable
@@ -60,19 +66,17 @@ jobs:
         else
           mv dist/DivergenceAnalyzer dist/${{ matrix.artifact }}
         fi
-      working-directory: ./DivergenceAnalyzer
       shell: bash
     
     - name: ✅ Make executable (Unix)
       if: matrix.os != 'windows-latest'
       run: chmod +x dist/${{ matrix.artifact }}
-      working-directory: ./DivergenceAnalyzer
     
     - name: 📤 Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.name }}-Build
-        path: DivergenceAnalyzer/dist/${{ matrix.artifact }}
+        path: dist/${{ matrix.artifact }}
         
     - name: 🎉 Build complete
       run: echo "✅ Build completed for ${{ matrix.name }}!"
