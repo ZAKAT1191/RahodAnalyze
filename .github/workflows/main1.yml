@@ -1,0 +1,85 @@
+name: multik
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Ручной запуск
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        include:
+          - os: windows-latest
+            name: Windows
+            artifact: divergence-analyzer-windows.exe
+            build_cmd: pyinstaller --onefile --windowed --name "DivergenceAnalyzer" divergence_analyzer_gui.py
+          - os: macos-latest  
+            name: macOS
+            artifact: divergence-analyzer-macos
+            build_cmd: pyinstaller --onefile --windowed --name "DivergenceAnalyzer" divergence_analyzer_gui.py
+          - os: ubuntu-latest
+            name: Linux
+            artifact: divergence-analyzer-linux
+            build_cmd: pyinstaller --onefile --name "DivergenceAnalyzer" divergence_analyzer_gui.py
+
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+    
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.9'
+    
+    - name: 📦 Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pandas matplotlib numpy pyinstaller
+    
+    - name: 📁 List files (Debug)
+      run: |
+        echo "=== Root directory ==="
+        ls -la
+        echo "=== Looking for Python files ==="
+        find . -name "*.py" -type f
+      shell: bash
+    
+    - name: 🔨 Build application (${{ matrix.name }})
+      run: ${{ matrix.build_cmd }}
+    
+    - name: 📁 List dist contents (Debug)
+      run: |
+        echo "=== Dist directory contents ==="
+        ls -la dist/
+      shell: bash
+    
+    - name: 🏷️ Rename executable
+      run: |
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          mv dist/DivergenceAnalyzer.exe dist/${{ matrix.artifact }}
+        else
+          mv dist/DivergenceAnalyzer dist/${{ matrix.artifact }}
+        fi
+      shell: bash
+    
+    - name: ✅ Make executable (Unix)
+      if: matrix.os != 'windows-latest'
+      run: chmod +x dist/${{ matrix.artifact }}
+    
+    - name: 📤 Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.name }}-Build
+        path: dist/${{ matrix.artifact }}
+        
+    - name: 🎉 Build complete
+      run: echo "✅ Build completed for ${{ matrix.name }}!"
+
+# Убираем автоматические релизы - пока используем только артефакты
+# После настройки прав можно будет включить обратно
